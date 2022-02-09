@@ -1,0 +1,11 @@
+<publishData>
+  <publishProfile profileName="logic-eis-dev-auea - Web Deploy" publishMethod="MSDeploy" publishUrl="logic-eis-dev-auea.scm.azurewebsites.net:443" msdeploySite="logic-eis-dev-auea" userName="$logic-eis-dev-auea" userPWD="jfX2iP5y3xvtlYfNQZcSWD912bH2KTKsn8r3NsmRbmvJCeTcT4j9ZG7FN8D6" destinationAppUrl="http://logic-eis-dev-auea.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="http://windows.azure.com" webSystem="WebSites">
+    <databases />
+  </publishProfile>
+  <publishProfile profileName="logic-eis-dev-auea - FTP" publishMethod="FTP" publishUrl="ftp://waws-prod-ln1-079.ftp.azurewebsites.windows.net/site/wwwroot" ftpPassiveMode="True" userName="logic-eis-dev-auea\$logic-eis-dev-auea" userPWD="jfX2iP5y3xvtlYfNQZcSWD912bH2KTKsn8r3NsmRbmvJCeTcT4j9ZG7FN8D6" destinationAppUrl="http://logic-eis-dev-auea.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="http://windows.azure.com" webSystem="WebSites">
+    <databases />
+  </publishProfile>
+  <publishProfile profileName="logic-eis-dev-auea - Zip Deploy" publishMethod="ZipDeploy" publishUrl="logic-eis-dev-auea.scm.azurewebsites.net:443" userName="$logic-eis-dev-auea" userPWD="jfX2iP5y3xvtlYfNQZcSWD912bH2KTKsn8r3NsmRbmvJCeTcT4j9ZG7FN8D6" destinationAppUrl="http://logic-eis-dev-auea.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="http://windows.azure.com" webSystem="WebSites">
+    <databases />
+  </publishProfile>
+</publishData>
