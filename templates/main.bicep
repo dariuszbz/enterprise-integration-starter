@@ -129,6 +129,7 @@ module applicationGatewayModule './applicationGateway.bicep' = {
   }
   dependsOn: [
     networkingModule
+    apimModule
   ]
 }
 

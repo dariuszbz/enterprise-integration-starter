@@ -1,0 +1,1393 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.1124.51302",
+      "templateHash": "12622054716987480589"
+    }
+  },
+  "parameters": {
+    "storageAccountName": {
+      "type": "string"
+    },
+    "storageAccountType": {
+      "type": "string"
+    },
+    "logicAppName": {
+      "type": "string"
+    },
+    "logicAppAspName": {
+      "type": "string"
+    },
+    "logicAppAspSku": {
+      "type": "object"
+    },
+    "vnetName": {
+      "type": "string"
+    },
+    "subnets": {
+      "type": "object"
+    },
+    "dnsZoneNameSites": {
+      "type": "string"
+    },
+    "dnsZoneNameStorage": {
+      "type": "string"
+    },
+    "logicAppPrivateLinkName": {
+      "type": "string"
+    },
+    "logicAppPrivateEndpointName": {
+      "type": "string"
+    },
+    "storageAccountPrivateLinkName": {
+      "type": "string"
+    },
+    "storageAccountPrivateEndpointName": {
+      "type": "string"
+    },
+    "applicationGatewayProperties": {
+      "type": "object"
+    },
+    "apimProperties": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "defaultSubnetName": "default",
+    "bastionSubnetName": "AzureBastionSubnet"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('rg-deploy-{0}', parameters('storageAccountName'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "storageAccountType": {
+            "value": "[parameters('storageAccountType')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "8979221809148286363"
+            }
+          },
+          "parameters": {
+            "storageAccountName": {
+              "type": "string"
+            },
+            "storageAccountType": {
+              "type": "string",
+              "defaultValue": "Standard_LRS",
+              "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_ZRS",
+                "Premium_LRS"
+              ]
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2021-04-01",
+              "name": "[parameters('storageAccountName')]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "[parameters('storageAccountType')]"
+              },
+              "kind": "StorageV2",
+              "properties": {
+                "accessTier": "Hot",
+                "minimumTlsVersion": "TLS1_2",
+                "networkAcls": {
+                  "bypass": "AzureServices",
+                  "virtualNetworkRules": [],
+                  "ipRules": [],
+                  "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "routingPreference": {
+                  "routingChoice": "MicrosoftRouting",
+                  "publishMicrosoftEndpoints": false,
+                  "publishInternetEndpoints": false
+                },
+                "encryption": {
+                  "services": {
+                    "file": {
+                      "keyType": "Account",
+                      "enabled": true
+                    },
+                    "blob": {
+                      "keyType": "Account",
+                      "enabled": true
+                    }
+                  },
+                  "keySource": "Microsoft.Storage"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "storageAccountDetails": {
+              "type": "object",
+              "value": {
+                "apiVersion": "2021-04-01",
+                "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+                "name": "[parameters('storageAccountName')]"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('rg-deploy-{0}', parameters('logicAppName'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logicAppAspName": {
+            "value": "[parameters('logicAppAspName')]"
+          },
+          "logicAppAspSku": {
+            "value": "[parameters('logicAppAspSku')]"
+          },
+          "logicAppName": {
+            "value": "[parameters('logicAppName')]"
+          },
+          "storageAccountDetails": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('rg-deploy-{0}', parameters('storageAccountName'))), '2020-10-01').outputs.storageAccountDetails.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "17805246647574885686"
+            }
+          },
+          "parameters": {
+            "logicAppAspName": {
+              "type": "string"
+            },
+            "logicAppAspSku": {
+              "type": "object",
+              "defaultValue": {
+                "name": "WS1",
+                "tier": "WorkflowStandard",
+                "size": "WS1",
+                "family": "WS",
+                "capacity": 1
+              }
+            },
+            "logicAppName": {
+              "type": "string"
+            },
+            "storageAccountDetails": {
+              "type": "object",
+              "metadata": {
+                "description": "Contains storage account API version, name and id to retrieve the connection string."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2018-02-01",
+              "name": "[parameters('logicAppAspName')]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "[parameters('logicAppAspSku').name]",
+                "tier": "[parameters('logicAppAspSku').tier]",
+                "size": "[parameters('logicAppAspSku').size]",
+                "family": "[parameters('logicAppAspSku').family]",
+                "capacity": "[parameters('logicAppAspSku').capacity]"
+              },
+              "kind": "elastic",
+              "properties": {}
+            },
+            {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2018-11-01",
+              "name": "[parameters('logicAppName')]",
+              "location": "[resourceGroup().location]",
+              "kind": "functionapp,workflowapp",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                  {
+                    "name": "[format('{0}.azurewebsites.net', parameters('logicAppName'))]",
+                    "sslState": "Disabled",
+                    "hostType": "Standard"
+                  },
+                  {
+                    "name": "[format('{0}.scm.azurewebsites.net', parameters('logicAppName'))]",
+                    "sslState": "Disabled",
+                    "hostType": "Repository"
+                  }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('logicAppAspName'))]",
+                "siteConfig": {
+                  "numberOfWorkers": 1,
+                  "alwaysOn": false,
+                  "http20Enabled": false
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('logicAppAspName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Web/sites/config",
+              "apiVersion": "2018-11-01",
+              "name": "[format('{0}/appsettings', parameters('logicAppName'))]",
+              "properties": {
+                "APP_KIND": "workflowApp",
+                "AzureFunctionsJobHost__extensionBundle__id": "Microsoft.Azure.Functions.ExtensionBundle.Workflows",
+                "AzureFunctionsJobHost__extensionBundle__version": "[1.*, 2.0.0)",
+                "AzureWebJobsStorage": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountDetails').name, environment().suffixes.storage, listKeys(parameters('storageAccountDetails').id, parameters('storageAccountDetails').apiVersion).keys[0].value)]",
+                "FUNCTIONS_EXTENSION_VERSION": "~3",
+                "FUNCTIONS_WORKER_RUNTIME": "node",
+                "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', parameters('storageAccountDetails').name, environment().suffixes.storage, listKeys(parameters('storageAccountDetails').id, parameters('storageAccountDetails').apiVersion).keys[0].value)]",
+                "WEBSITE_CONTENTSHARE": "[format('{0}fileshare', parameters('logicAppName'))]",
+                "WEBSITE_NODE_DEFAULT_VERSION": "~12",
+                "WEBSITE_DNS_SERVER": "168.63.129.16",
+                "WEBSITE_VNET_ROUTE_ALL": "1"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('logicAppName'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('rg-deploy-{0}', parameters('storageAccountName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "rg-deploy-vnet",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "logicAppSubnetName": {
+            "value": "[parameters('subnets').logicAppSubnetName]"
+          },
+          "apimSubnetName": {
+            "value": "[parameters('subnets').apimSubnetName]"
+          },
+          "applicationGatewaySubnetName": {
+            "value": "[parameters('subnets').applicationGatewaySubnetName]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('subnets').vnetAddressPrefix]"
+          },
+          "defaultSnetAddressPrefix": {
+            "value": "[parameters('subnets').defaultSnetAddressPrefix]"
+          },
+          "logicAppsSnetAddressPrefix": {
+            "value": "[parameters('subnets').logicAppsSnetAddressPrefix]"
+          },
+          "apimSnetAddressPrefix": {
+            "value": "[parameters('subnets').apimSnetAddressPrefix]"
+          },
+          "applicationGatewaySnetAddressPrefix": {
+            "value": "[parameters('subnets').applicationGatewaySnetAddressPrefix]"
+          },
+          "bastionSubnetAddressPrefix": {
+            "value": "[parameters('subnets').bastionSubnetAddressPrefix]"
+          },
+          "bastionSubnetName": {
+            "value": "[variables('bastionSubnetName')]"
+          },
+          "defaultSubnetName": {
+            "value": "[variables('defaultSubnetName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "5749189567703713883"
+            }
+          },
+          "parameters": {
+            "vnetName": {
+              "type": "string"
+            },
+            "logicAppSubnetName": {
+              "type": "string"
+            },
+            "apimSubnetName": {
+              "type": "string"
+            },
+            "applicationGatewaySubnetName": {
+              "type": "string"
+            },
+            "defaultSubnetName": {
+              "type": "string"
+            },
+            "vnetAddressPrefix": {
+              "type": "string"
+            },
+            "defaultSnetAddressPrefix": {
+              "type": "string"
+            },
+            "logicAppsSnetAddressPrefix": {
+              "type": "string"
+            },
+            "apimSnetAddressPrefix": {
+              "type": "string"
+            },
+            "applicationGatewaySnetAddressPrefix": {
+              "type": "string"
+            },
+            "bastionSubnetAddressPrefix": {
+              "type": "string"
+            },
+            "bastionSubnetName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-06-01",
+              "name": "[parameters('vnetName')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[parameters('defaultSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('defaultSnetAddressPrefix')]",
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  },
+                  {
+                    "name": "[parameters('logicAppSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('logicAppsSnetAddressPrefix')]",
+                      "delegations": [
+                        {
+                          "name": "delegation",
+                          "properties": {
+                            "serviceName": "Microsoft.Web/serverfarms"
+                          }
+                        }
+                      ],
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Disabled"
+                    }
+                  },
+                  {
+                    "name": "[parameters('apimSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('apimSnetAddressPrefix')]",
+                      "privateEndpointNetworkPolicies": "Enabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  },
+                  {
+                    "name": "[parameters('applicationGatewaySubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('applicationGatewaySnetAddressPrefix')]",
+                      "privateEndpointNetworkPolicies": "Enabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  },
+                  {
+                    "name": "[parameters('bastionSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('bastionSubnetAddressPrefix')]"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "rg-deploy-logicApp-vnetIntegration",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "logicAppSubnetName": {
+            "value": "[parameters('subnets').logicAppSubnetName]"
+          },
+          "logicAppName": {
+            "value": "[parameters('logicAppName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "6428540534871330071"
+            }
+          },
+          "parameters": {
+            "vnetName": {
+              "type": "string"
+            },
+            "logicAppSubnetName": {
+              "type": "string"
+            },
+            "logicAppName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/sites/networkConfig",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('logicAppName'), 'virtualNetwork')]",
+              "properties": {
+                "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('logicAppSubnetName'))]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('rg-deploy-{0}', parameters('logicAppName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'rg-deploy-vnet')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "rg-deploy-privateEndpoints",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "dnsZoneNameSites": {
+            "value": "[parameters('dnsZoneNameSites')]"
+          },
+          "dnsZoneNameStorage": {
+            "value": "[parameters('dnsZoneNameStorage')]"
+          },
+          "logicAppPrivateLinkName": {
+            "value": "[parameters('logicAppPrivateLinkName')]"
+          },
+          "logicAppPrivateEndpointName": {
+            "value": "[parameters('logicAppPrivateEndpointName')]"
+          },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "storageAccountPrivateLinkName": {
+            "value": "[parameters('storageAccountPrivateLinkName')]"
+          },
+          "storageAccountPrivateEndpointName": {
+            "value": "[parameters('storageAccountPrivateEndpointName')]"
+          },
+          "logicAppName": {
+            "value": "[parameters('logicAppName')]"
+          },
+          "defaultSubnetName": {
+            "value": "[variables('defaultSubnetName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "8193790738848022917"
+            }
+          },
+          "parameters": {
+            "storageAccountName": {
+              "type": "string"
+            },
+            "vnetName": {
+              "type": "string"
+            },
+            "dnsZoneNameSites": {
+              "type": "string"
+            },
+            "dnsZoneNameStorage": {
+              "type": "string"
+            },
+            "logicAppPrivateLinkName": {
+              "type": "string"
+            },
+            "logicAppPrivateEndpointName": {
+              "type": "string"
+            },
+            "storageAccountPrivateLinkName": {
+              "type": "string"
+            },
+            "storageAccountPrivateEndpointName": {
+              "type": "string"
+            },
+            "logicAppName": {
+              "type": "string"
+            },
+            "defaultSubnetName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "private-endpoint-logic-app-deploy",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "dnsZoneName": {
+                    "value": "[parameters('dnsZoneNameSites')]"
+                  },
+                  "privateLinkName": {
+                    "value": "[parameters('logicAppPrivateLinkName')]"
+                  },
+                  "privateEndpointName": {
+                    "value": "[parameters('logicAppPrivateEndpointName')]"
+                  },
+                  "serviceId": {
+                    "value": "[resourceId('Microsoft.Web/sites', parameters('logicAppName'))]"
+                  },
+                  "groupId": {
+                    "value": "sites"
+                  },
+                  "snetId": {
+                    "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('defaultSubnetName'))]"
+                  },
+                  "vnetId": {
+                    "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                  },
+                  "defaultSubnetName": {
+                    "value": "[parameters('defaultSubnetName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1124.51302",
+                      "templateHash": "14148669833007200902"
+                    }
+                  },
+                  "parameters": {
+                    "dnsZoneName": {
+                      "type": "string"
+                    },
+                    "privateEndpointName": {
+                      "type": "string"
+                    },
+                    "privateLinkName": {
+                      "type": "string"
+                    },
+                    "groupId": {
+                      "type": "string"
+                    },
+                    "serviceId": {
+                      "type": "string"
+                    },
+                    "snetId": {
+                      "type": "string"
+                    },
+                    "vnetId": {
+                      "type": "string"
+                    },
+                    "defaultSubnetName": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "location": "[resourceGroup().location]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/privateDnsZones",
+                      "apiVersion": "2018-09-01",
+                      "name": "[parameters('dnsZoneName')]",
+                      "location": "global"
+                    },
+                    {
+                      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                      "apiVersion": "2018-09-01",
+                      "name": "[format('{0}/{1}', parameters('dnsZoneName'), parameters('privateLinkName'))]",
+                      "location": "global",
+                      "properties": {
+                        "registrationEnabled": false,
+                        "virtualNetwork": {
+                          "id": "[parameters('vnetId')]"
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/privateDnsZones', parameters('dnsZoneName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Network/privateEndpoints",
+                      "apiVersion": "2020-11-01",
+                      "name": "[parameters('privateEndpointName')]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[parameters('snetId')]"
+                        },
+                        "privateLinkServiceConnections": [
+                          {
+                            "name": "[parameters('privateEndpointName')]",
+                            "properties": {
+                              "privateLinkServiceId": "[parameters('serviceId')]",
+                              "groupIds": [
+                                "[format('{0}', parameters('groupId'))]"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+                      "apiVersion": "2020-11-01",
+                      "name": "[format('{0}/{1}', parameters('privateEndpointName'), parameters('defaultSubnetName'))]",
+                      "properties": {
+                        "privateDnsZoneConfigs": [
+                          {
+                            "name": "config1",
+                            "properties": {
+                              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('dnsZoneName'))]"
+                            }
+                          }
+                        ]
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/privateDnsZones', parameters('dnsZoneName'))]",
+                        "[resourceId('Microsoft.Network/privateEndpoints', parameters('privateEndpointName'))]"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "private-endpoint-blob-deploy",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "dnsZoneName": {
+                    "value": "[parameters('dnsZoneNameStorage')]"
+                  },
+                  "privateLinkName": {
+                    "value": "[parameters('storageAccountPrivateLinkName')]"
+                  },
+                  "privateEndpointName": {
+                    "value": "[parameters('storageAccountPrivateEndpointName')]"
+                  },
+                  "serviceId": {
+                    "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+                  },
+                  "groupId": {
+                    "value": "blob"
+                  },
+                  "snetId": {
+                    "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('defaultSubnetName'))]"
+                  },
+                  "vnetId": {
+                    "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                  },
+                  "defaultSubnetName": {
+                    "value": "[parameters('defaultSubnetName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1124.51302",
+                      "templateHash": "14148669833007200902"
+                    }
+                  },
+                  "parameters": {
+                    "dnsZoneName": {
+                      "type": "string"
+                    },
+                    "privateEndpointName": {
+                      "type": "string"
+                    },
+                    "privateLinkName": {
+                      "type": "string"
+                    },
+                    "groupId": {
+                      "type": "string"
+                    },
+                    "serviceId": {
+                      "type": "string"
+                    },
+                    "snetId": {
+                      "type": "string"
+                    },
+                    "vnetId": {
+                      "type": "string"
+                    },
+                    "defaultSubnetName": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "location": "[resourceGroup().location]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/privateDnsZones",
+                      "apiVersion": "2018-09-01",
+                      "name": "[parameters('dnsZoneName')]",
+                      "location": "global"
+                    },
+                    {
+                      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                      "apiVersion": "2018-09-01",
+                      "name": "[format('{0}/{1}', parameters('dnsZoneName'), parameters('privateLinkName'))]",
+                      "location": "global",
+                      "properties": {
+                        "registrationEnabled": false,
+                        "virtualNetwork": {
+                          "id": "[parameters('vnetId')]"
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/privateDnsZones', parameters('dnsZoneName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Network/privateEndpoints",
+                      "apiVersion": "2020-11-01",
+                      "name": "[parameters('privateEndpointName')]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[parameters('snetId')]"
+                        },
+                        "privateLinkServiceConnections": [
+                          {
+                            "name": "[parameters('privateEndpointName')]",
+                            "properties": {
+                              "privateLinkServiceId": "[parameters('serviceId')]",
+                              "groupIds": [
+                                "[format('{0}', parameters('groupId'))]"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+                      "apiVersion": "2020-11-01",
+                      "name": "[format('{0}/{1}', parameters('privateEndpointName'), parameters('defaultSubnetName'))]",
+                      "properties": {
+                        "privateDnsZoneConfigs": [
+                          {
+                            "name": "config1",
+                            "properties": {
+                              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('dnsZoneName'))]"
+                            }
+                          }
+                        ]
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/privateDnsZones', parameters('dnsZoneName'))]",
+                        "[resourceId('Microsoft.Network/privateEndpoints', parameters('privateEndpointName'))]"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('rg-deploy-{0}', parameters('logicAppName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'rg-deploy-vnet')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "rg-deploy-apim",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "apimName": {
+            "value": "[parameters('apimProperties').apimName]"
+          },
+          "logicAppName": {
+            "value": "[parameters('logicAppName')]"
+          },
+          "apimSkuName": {
+            "value": "[parameters('apimProperties').sku.name]"
+          },
+          "apimSkuCapacity": {
+            "value": "[parameters('apimProperties').sku.capacity]"
+          },
+          "apimSubnetName": {
+            "value": "[parameters('subnets').apimSubnetName]"
+          },
+          "publisherUserEmail": {
+            "value": "[parameters('apimProperties').publisherEmail]"
+          },
+          "publisherName": {
+            "value": "[parameters('apimProperties').publisherName]"
+          },
+          "notificationSenderEmail": {
+            "value": "[parameters('apimProperties').notificationSenderEmail]"
+          },
+          "apimResourcePrefix": {
+            "value": "[parameters('apimProperties').apimResourcePrefix]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "4260491565718178895"
+            }
+          },
+          "parameters": {
+            "apimName": {
+              "type": "string"
+            },
+            "logicAppName": {
+              "type": "string"
+            },
+            "vnetName": {
+              "type": "string"
+            },
+            "apimSkuName": {
+              "type": "string"
+            },
+            "apimSkuCapacity": {
+              "type": "int"
+            },
+            "apimSubnetName": {
+              "type": "string"
+            },
+            "publisherUserEmail": {
+              "type": "string"
+            },
+            "publisherName": {
+              "type": "string"
+            },
+            "notificationSenderEmail": {
+              "type": "string"
+            },
+            "apimResourcePrefix": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "logicAppBackendName": "[format('{0}-backend', parameters('logicAppName'))]",
+            "logicAppNameValueName": "[format('{0}-name-value', parameters('logicAppName'))]",
+            "logicAppNameValueTemplatePath": "[format('{0}-template-path', variables('logicAppNameValueName'))]",
+            "logicAppHostName": "[format('https://{0}.azurewebsites.net', parameters('logicAppName'))]",
+            "logicAppSchemaId": "[format('{0}-schema', parameters('logicAppName'))]",
+            "logicAppPolicyRewriteUrl": "[format('/manual/invoke/?api-version=2020-05-01-preview&amp;sp=/triggers/manual/run&amp;sv=1.0&amp;sig={{{{{0}}}}}', variables('logicAppNameValueTemplatePath'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ApiManagement/service",
+              "apiVersion": "2021-01-01-preview",
+              "name": "[parameters('apimName')]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "[parameters('apimSkuName')]",
+                "capacity": "[parameters('apimSkuCapacity')]"
+              },
+              "properties": {
+                "publisherEmail": "[parameters('publisherUserEmail')]",
+                "publisherName": "[parameters('publisherName')]",
+                "notificationSenderEmail": "[parameters('notificationSenderEmail')]",
+                "hostnameConfigurations": [
+                  {
+                    "type": "Proxy",
+                    "hostName": "[format('{0}.azure-api.net', parameters('apimName'))]"
+                  }
+                ],
+                "virtualNetworkConfiguration": {
+                  "subnetResourceId": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), parameters('apimSubnetName'))]"
+                },
+                "virtualNetworkType": "Internal"
+              }
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis",
+              "apiVersion": "2021-01-01-preview",
+              "name": "[format('{0}/{1}', parameters('apimName'), parameters('logicAppName'))]",
+              "properties": {
+                "displayName": "[parameters('logicAppName')]",
+                "apiRevision": "1",
+                "description": "[parameters('logicAppName')]",
+                "subscriptionRequired": true,
+                "serviceUrl": "[variables('logicAppHostName')]",
+                "path": "logicapp",
+                "protocols": [
+                  "http",
+                  "https"
+                ],
+                "isCurrent": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/backends",
+              "apiVersion": "2021-01-01-preview",
+              "name": "[format('{0}/{1}', parameters('apimName'), variables('logicAppBackendName'))]",
+              "properties": {
+                "description": "[parameters('logicAppName')]",
+                "url": "[variables('logicAppHostName')]",
+                "protocol": "http",
+                "resourceId": "[format('{0}/subscriptions/{1}/resourceGroups/{2}/providers/Microsoft.Web/sites/{3}', parameters('apimResourcePrefix'), subscription().id, resourceGroup().name, parameters('logicAppName'))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/properties",
+              "apiVersion": "2019-01-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), variables('logicAppNameValueName'))]",
+              "properties": {
+                "displayName": "[variables('logicAppNameValueTemplatePath')]",
+                "value": "Workflow signature placeholder.",
+                "tags": [],
+                "secret": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis/schemas",
+              "apiVersion": "2021-01-01-preview",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), parameters('logicAppName'), variables('logicAppSchemaId'))]",
+              "properties": {
+                "contentType": "application/vnd.ms-azure-apim.swagger.definitions+json",
+                "document": {}
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), parameters('logicAppName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis/operations",
+              "apiVersion": "2021-01-01-preview",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), parameters('logicAppName'), 'request-invoke')]",
+              "properties": {
+                "displayName": "request-invoke",
+                "method": "POST",
+                "urlTemplate": "/manual/invoke",
+                "templateParameters": [],
+                "description": "Trigger a run of the logic app.",
+                "request": {
+                  "description": "The request body.",
+                  "queryParameters": [],
+                  "headers": [],
+                  "representations": [
+                    {
+                      "contentType": "application/json",
+                      "schemaId": "[variables('logicAppSchemaId')]",
+                      "typeName": "request-request",
+                      "sample": "{}"
+                    }
+                  ]
+                },
+                "responses": [
+                  {
+                    "statusCode": 200,
+                    "description": "The Logic App Response.",
+                    "representations": [
+                      {
+                        "contentType": "application/json",
+                        "schemaId": "[variables('logicAppSchemaId')]",
+                        "typeName": "RequestPathsInvokePost200ApplicationJsonResponse",
+                        "sample": "{}"
+                      }
+                    ],
+                    "headers": []
+                  },
+                  {
+                    "statusCode": 500,
+                    "description": "The Logic App Response.",
+                    "representations": [
+                      {
+                        "contentType": "application/json",
+                        "schemaId": "[variables('logicAppSchemaId')]",
+                        "typeName": "RequestPathsInvokePost500ApplicationJsonResponse",
+                        "sample": "{}"
+                      }
+                    ],
+                    "headers": []
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), parameters('logicAppName'))]",
+                "[resourceId('Microsoft.ApiManagement/service/apis/schemas', parameters('apimName'), parameters('logicAppName'), variables('logicAppSchemaId'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis/policies",
+              "apiVersion": "2021-01-01-preview",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), parameters('logicAppName'), 'policy')]",
+              "properties": {
+                "value": "[format('<policies>\r\n<inbound>\r\n<base />\r\n<set-backend-service id=\"apim-generated-policy\" backend-id=\"{0}\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n</backend>\r\n<outbound>\r\n<base />\r\n</outbound>\r\n<on-error>\r\n<base />\r\n</on-error>\r\n</policies>', variables('logicAppBackendName'))]",
+                "format": "xml"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), parameters('logicAppName'))]",
+                "[resourceId('Microsoft.ApiManagement/service/backends', parameters('apimName'), variables('logicAppBackendName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+              "apiVersion": "2021-01-01-preview",
+              "name": "[format('{0}/{1}/{2}/{3}', parameters('apimName'), parameters('logicAppName'), 'request-invoke', 'policy')]",
+              "properties": {
+                "value": "[format('<policies>\r\n<inbound>\r\n<base />\r\n<set-method id=\"apim-generated-policy\">POST</set-method>\r\n<rewrite-uri id=\"apim-generated-policy\" template=\"{0}\" />\r\n<set-header id=\"apim-generated-policy\" name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n</inbound>\r\n<backend>\r\n<base />\r\n</backend>\r\n<outbound>\r\n<base />\r\n</outbound>\r\n<on-error>\r\n<base />\r\n</on-error>\r\n</policies>', variables('logicAppPolicyRewriteUrl'))]",
+                "format": "xml"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), parameters('logicAppName'))]",
+                "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('apimName'), parameters('logicAppName'), 'request-invoke')]",
+                "[resourceId('Microsoft.ApiManagement/service/properties', parameters('apimName'), variables('logicAppNameValueName'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'rg-deploy-vnet')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "rg-deploy-application-gateway",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "applicationGatewayName": {
+            "value": "[parameters('applicationGatewayProperties').applicationGatewayName]"
+          },
+          "tier": {
+            "value": "[parameters('applicationGatewayProperties').tier]"
+          },
+          "sku": {
+            "value": "[parameters('applicationGatewayProperties').sku]"
+          },
+          "skuSize": {
+            "value": "[parameters('applicationGatewayProperties').skuSize]"
+          },
+          "capacity": {
+            "value": "[parameters('applicationGatewayProperties').capacity]"
+          },
+          "subnetName": {
+            "value": "[parameters('applicationGatewayProperties').subnetName]"
+          },
+          "publicIpAddressName": {
+            "value": "[parameters('applicationGatewayProperties').publicIpAddressName]"
+          },
+          "allocationMethod": {
+            "value": "[parameters('applicationGatewayProperties').allocationMethod]"
+          },
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "apimName": {
+            "value": "[parameters('apimProperties').apimName]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "5339104999974348687"
+            }
+          },
+          "parameters": {
+            "applicationGatewayName": {
+              "type": "string"
+            },
+            "tier": {
+              "type": "string"
+            },
+            "skuSize": {
+              "type": "string"
+            },
+            "capacity": {
+              "type": "int"
+            },
+            "subnetName": {
+              "type": "string"
+            },
+            "publicIpAddressName": {
+              "type": "string"
+            },
+            "sku": {
+              "type": "string"
+            },
+            "allocationMethod": {
+              "type": "string"
+            },
+            "vnetName": {
+              "type": "string"
+            },
+            "apimName": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "frontEndPort80": "port_80",
+            "publicIpName": "appGwPublicFrontendIp",
+            "backendPoolApim": "backend-apim",
+            "backendHttp": "http-backend",
+            "httpListenerApim": "listener-backend-apim",
+            "routingApim": "routing-backend-apim",
+            "healthProbeApim": "health-probe-apim",
+            "apimHostName": "[format('{0}.azure-api.net', parameters('apimName'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-08-01",
+              "name": "[parameters('publicIpAddressName')]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "[parameters('sku')]"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "[parameters('allocationMethod')]"
+              }
+            },
+            {
+              "type": "Microsoft.Network/applicationGateways",
+              "apiVersion": "2019-09-01",
+              "name": "[parameters('applicationGatewayName')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "sku": {
+                  "name": "[parameters('skuSize')]",
+                  "tier": "[parameters('tier')]",
+                  "capacity": "[parameters('capacity')]"
+                },
+                "gatewayIPConfigurations": [
+                  {
+                    "name": "appGatewayIpConfig",
+                    "properties": {
+                      "subnet": {
+                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
+                      }
+                    }
+                  }
+                ],
+                "frontendIPConfigurations": [
+                  {
+                    "name": "[variables('publicIpName')]",
+                    "properties": {
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressName'))]"
+                      }
+                    }
+                  }
+                ],
+                "frontendPorts": [
+                  {
+                    "name": "[variables('frontEndPort80')]",
+                    "properties": {
+                      "port": 80
+                    }
+                  }
+                ],
+                "backendAddressPools": [
+                  {
+                    "name": "[variables('backendPoolApim')]",
+                    "properties": {
+                      "backendAddresses": [
+                        {
+                          "fqdn": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apimName')), '2021-01-01-preview').privateIPAddresses[0]]"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "backendHttpSettingsCollection": [
+                  {
+                    "name": "[variables('backendHttp')]",
+                    "properties": {
+                      "port": 80,
+                      "protocol": "Http",
+                      "cookieBasedAffinity": "Disabled",
+                      "requestTimeout": 20,
+                      "hostName": "[variables('apimHostName')]",
+                      "probe": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/probes', parameters('applicationGatewayName'), variables('healthProbeApim'))]"
+                      }
+                    }
+                  }
+                ],
+                "httpListeners": [
+                  {
+                    "name": "[variables('httpListenerApim')]",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', parameters('applicationGatewayName'), variables('publicIpName'))]"
+                      },
+                      "frontendPort": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', parameters('applicationGatewayName'), variables('frontEndPort80'))]"
+                      },
+                      "protocol": "Http",
+                      "sslCertificate": null
+                    }
+                  }
+                ],
+                "requestRoutingRules": [
+                  {
+                    "name": "[variables('routingApim')]",
+                    "properties": {
+                      "ruleType": "Basic",
+                      "httpListener": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', parameters('applicationGatewayName'), variables('httpListenerApim'))]"
+                      },
+                      "priority": null,
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', parameters('applicationGatewayName'), variables('backendPoolApim'))]"
+                      },
+                      "backendHttpSettings": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', parameters('applicationGatewayName'), variables('backendHttp'))]"
+                      }
+                    }
+                  }
+                ],
+                "probes": [
+                  {
+                    "name": "[variables('healthProbeApim')]",
+                    "properties": {
+                      "protocol": "Http",
+                      "path": "/status-0123456789abcdef",
+                      "interval": 30,
+                      "timeout": 30,
+                      "unhealthyThreshold": 3,
+                      "pickHostNameFromBackendHttpSettings": true,
+                      "minServers": 0,
+                      "match": {}
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressName'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'rg-deploy-vnet')]"
+      ]
+    }
+  ]
+}
