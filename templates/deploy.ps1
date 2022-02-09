@@ -1,21 +1,28 @@
+$AZURE_SUBSCRIPTION_ID_DEV = "e96ed8d4-2224-445d-a27b-d1523a78bfe6"
+$AZURE_RESOURCE_GROUP_DEV = "Darius-AIS"
+$LA_NAME = "logic-eis-dev-auea" 
+$APIM_NAME = "apim-eis-dev-auea"
+$WORKFLOW_NAME = "eisHttpRequest"
+
 az deployment group create `
   --name AIS-Darius-v1 `
   --resource-group Darius-AIS `
   --template-file main.bicep `
   --parameters '@main.parameters-dev.json'
 
-# $profile = az webapp deployment list-publishing-profiles --name plan-eis-dev-auea --resource-group Darius-AIS -o tsv
+# $profile = az webapp deployment get-publishing-profiles --name $LA_NAME --resource-group $AZURE_RESOURCE_GROUP_DEV -o tsv
+# 
 
-Install-Module -Name Az.Websites   
-
+## full command if azure module, az cli or ... exist.
+# Install-Module -Name Az.Websites -Scope CurrentUser -Repository PSGallery -Force -AllowClobber
 
 Connect-AzAccount
-$con = Get-AzSubscription -SubscriptionId e96ed8d4-2224-445d-a27b-d1523a78bfe6
+$con = Get-AzSubscription -SubscriptionId $AZURE_SUBSCRIPTION_ID_DEV
 Select-AzSubscription -SubscriptionObject $con
 
 $profile = Get-AzWebAppPublishingProfile `
-  -ResourceGroupName "Darius-AIS" `
-  -Name "logic-eis-dev-auea" 
+  -ResourceGroupName  $AZURE_RESOURCE_GROUP_DEV `
+  -Name $LA_NAME 
 
 
 Write-Output  $profile > publishprofile
@@ -33,18 +40,17 @@ $workdingDir = Get-Location
      "-verbose"
 
 
-     ### todo: below after lunch
-$azureRestApiBasePath = "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID_DEV }}/resourceGroups/${{ secrets.AZURE_RESOURCE_GROUP_DEV }}/providers"
-$worklowCallback = $(az rest --method post --uri "$azureRestApiBasePath/Microsoft.Web/sites/${{ env.LA_NAME }}/hostruntime/runtime/webhooks/workflow/api/management/workflows/${{ env.WORKFLOW_NAME }}/triggers/manual/listCallbackUrl?api-version=2018-11-01")
+$azureRestApiBasePath = "https://management.azure.com/subscriptions/$AZURE_SUBSCRIPTION_ID_DEV/resourceGroups/$AZURE_RESOURCE_GROUP_DEV/providers"
+$worklowCallback = $(az rest --method post --uri "$azureRestApiBasePath/Microsoft.Web/sites/$LA_NAME/hostruntime/runtime/webhooks/workflow/api/management/workflows/$WORKFLOW_NAME/triggers/manual/listCallbackUrl?api-version=2018-11-01")
 $workflowResponse = $worklowCallback | ConvertFrom-Json
 $workflowBasePath= $workflowResponse.basePath
 
-$apimRestApiBasePath = "$azureRestApiBasePath/Microsoft.ApiManagement/service/${{ env.APIM_NAME }}"
+$apimRestApiBasePath = "$azureRestApiBasePath/Microsoft.ApiManagement/service/$APIM_NAME"
 #update APIM backend runtime url for logic app
 $backendPath = $workflowBasePath.Substring(0,$workflowBasePath.IndexOf("/manual/"))
 $backendBody = '{\"properties\":{\"url\":\"' + $backendPath + '\"}}'
-az rest --method patch --uri "$apimRestApiBasePath/backends/${{ env.LA_NAME }}-backend?api-version=2020-06-01-preview" --body $backendBody
+az rest --method patch --uri "$apimRestApiBasePath/backends/$LA_NAME-backend?api-version=2020-06-01-preview" --body $backendBody
 
 #Update APIM name value for logic app rewrite url signature
 $nameValueBody = '{\"properties\":{\"value\":\"' + $workflowResponse.queries.sig + '\"}}'
-az rest --method patch --uri "$apimRestApiBasePath/namedValues/${{ env.LA_NAME }}-name-value?api-version=2020-06-01-preview" --body $nameValueBody
+az rest --method patch --uri "$apimRestApiBasePath/namedValues/$LA_NAME-name-value?api-version=2020-06-01-preview" --body $nameValueBody
